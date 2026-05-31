@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clbs-video-edit-pro / 全合成MP4レンダラー（ほぼ完成形）
+clbs-youtube-edit / 全合成MP4レンダラー（ほぼ完成形）
 ジェットカット連結 → スライド/ピクチャー/Bロール/ワイプ合成 → 見出しバー＋テロップ焼き込み。
 入力: video.mp4 / jetcut_plan.json / timing_plan.json / telop_jetcut.json / 素材
 出力: final.mp4 / heading_*.png / telop.ass / _filtergraph.txt

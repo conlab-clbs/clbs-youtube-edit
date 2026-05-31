@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clbs-video-edit-pro / コア解析
+clbs-youtube-edit / コア解析
 - ffmpeg silencedetect で「文間の沈黙」を検出し、ジェットカット計画を作る
   （タグは無発音なのでタグ検出はしない。沈黙だけ切って編集点を増やす）
 - Whisper で文字起こし → difflib で台本本文と照合し、無発音タグの位置を逆算
