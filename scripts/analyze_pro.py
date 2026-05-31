@@ -623,7 +623,7 @@ def main(argv=None) -> int:
         encoding="utf-8")
 
     # 4) レポート
-    lines = ["# clbs-video-edit-pro Timing Report", "",
+    lines = ["# clbs-youtube-edit Timing Report", "",
              f"- source: {total:.2f}s / jetcut: {total_jc:.2f}s (cut {total-total_jc:.2f}s, {len(removed)} points)",
              f"- silence params: noise={args.noise_db}dB min={args.min_silence}s keep_tail={args.keep_tail}s keep_lead={args.keep_lead}s",
              "", "## Visual Events (jetcut timeline)", ""]

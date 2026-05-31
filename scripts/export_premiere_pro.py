@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clbs-video-edit-pro / Premiere XML 書き出し（XMEML v4）
+clbs-youtube-edit / Premiere XML 書き出し（XMEML v4）
 入力: jetcut_plan.json + timing_plan.json + video.mp4 + 素材
 トラック契約（厳守）:
   V1 メイン動画（ジェットカット済み）/ V2 ピクチャー / V3 スライド /
@@ -162,7 +162,7 @@ def main(argv=None) -> int:
 <!DOCTYPE xmeml>
 <xmeml version="4">
   <sequence>
-    <name>clbs-video-edit-pro</name>
+    <name>clbs-youtube-edit</name>
     <duration>{total_frames}</duration>
     <rate><timebase>{FPS}</timebase><ntsc>FALSE</ntsc></rate>
     <media>
