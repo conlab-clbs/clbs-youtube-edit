@@ -27,6 +27,27 @@ script.txt（無発音タグ＋<break>）＋ video.mp4
    final.mp4 ＋ project_premiere.xml ＋ telop_jetcut.srt
 ```
 
+## 技術スタック（How it works）
+
+各工程と使用ライブラリ。意図的に「軽量で再現性の高い」構成にしています。
+
+| 工程 | 使用ツール | 役割 |
+|---|---|---|
+| 沈黙ジェットカット | **ffmpeg `silencedetect`** | 文間の無音区間を検出。Silero VAD等のNNモデルは使わず、依存を最小化＆環境差をなくす |
+| 文字起こし | **OpenAI Whisper**（small既定） | 音声 → テキスト＋word単位タイムスタンプ |
+| 台本との照合 | **difflib.SequenceMatcher**（標準ライブラリ） | 台本本文とWhisper出力をアンカー照合し、無発音タグの時刻を逆算（追加依存なし） |
+| テロップ改行 | **BudouX** | 日本語の文節を解析し、意味の切れ目で自然に改行（DP最適化で2行に均す） |
+| 見出しバー・ワイプ角丸 | **Pillow** | 見出しPNG・角丸マスク・枠線を動的生成 |
+| テロップ焼き込み | **ffmpeg `subtitles`（libass）** | ASS字幕を本体へ合成。色・縁取り・位置を制御 |
+| 全合成・連結 | **ffmpeg filter_complex** | ジェットカット連結＋スライド/ピクチャー/Bロール/ワイプ/見出し/テロップを1パスで合成 |
+| PDF→スライド画像 | **PyMuPDF**（任意） | `slides.pdf` がある場合のみページを画像化 |
+
+> **設計メモ**: 旧 `clbs-video-edit` は Silero VAD（torch依存）＋ Levenshtein を使っていましたが、
+> 本スキルは **ffmpeg silencedetect ＋ 標準difflib** に置き換え、依存を減らした軽量構成にしています
+> （Whisperはtorchを使いますが、文字起こし以外はNN非依存）。
+
+---
+
 ## 必要環境
 
 - Python 3.10+
