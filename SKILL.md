@@ -1,6 +1,6 @@
 ---
 name: clbs-youtube-edit
-description: 顔出しHeyGenアバター動画（VSL・ウェビナー・YouTube本編）を、無発音タグ付き台本から自動編集して「Premiere Pro XML」と「ほぼ完成形のMP4（テロップ・見出し焼き込み済み）」を一気に書き出すスキル。文間の沈黙を非対称ジェットカット（喋り終わりに余韻を残す）し、Whisper文字起こし×台本のdifflib照合で無発音タグ（見出し/スライド/ピクチャー/Bロール/カムリターン）の位置を逆算、スライド＋右上角丸ワイプ・左ピクチャー・全画面Bロール・左上見出しバー・下端デザインテロップを自動合成する。「YouTube動画編集」「顔出し動画を編集」「アバター動画編集」「HeyGen動画編集」「ジェットカット」「完成MP4まで書き出し」「テロップ焼き込み」「見出しバー」「Premiere XML」などで使用。台本作成は clbs-video-script-pro、英語版は clbs-video-edit-en を使う。
+description: 顔出しHeyGenアバター動画（VSL・ウェビナー・YouTube本編）を、無発音タグ付き台本から自動編集して「Premiere Pro XML」と「ほぼ完成形のMP4（テロップ・見出し焼き込み済み）」を一気に書き出すスキル。文間の沈黙を非対称ジェットカット（喋り終わりに余韻を残す）し、Whisper文字起こし×台本のdifflib照合で無発音タグ（見出し/スライド/ピクチャー/Bロール/カムリターン）の位置を逆算、スライド＋右上角丸ワイプ・左ピクチャー・全画面Bロール・左上見出しバー・下端デザインテロップを自動合成する。「YouTube動画編集」「顔出し動画を編集」「アバター動画編集」「HeyGen動画編集」「ジェットカット」「完成MP4まで書き出し」「テロップ焼き込み」「見出しバー」「Premiere XML」などで使用。台本作成は clbs-youtube-script-pro、英語版は clbs-video-edit-en を使う。
 ---
 
 # clbs-youtube-edit
@@ -25,7 +25,7 @@ description: 顔出しHeyGenアバター動画（VSL・ウェビナー・YouTube
 └── broll/broll01.mp4      # 任意（[BロールN]対応・セリフより長い尺）
 ```
 
-台本タグ仕様・素材生成は `clbs-video-script-pro`（台本執筆スキル）と1対1で対応する。
+台本タグ仕様・素材生成は `clbs-youtube-script-pro`（台本執筆スキル）と1対1で対応する。
 
 ## 実行手順（3スクリプト）
 
@@ -79,6 +79,6 @@ python3 scripts/render_pro.py "$P"
 
 ## 関連スキル
 
-- 台本執筆（上流）：`clbs-video-script-pro`（無発音タグ＋break＋見出しタグ＋media_list.yaml）
+- 台本執筆（上流）：`clbs-youtube-script-pro`（無発音タグ＋break＋見出しタグ＋media_list.yaml）
 - 素材生成：Higgsfield（スライド/ピクチャー=Nano Banana 2、Bロール=Veo3）
 - 英語版：`clbs-video-edit-en`

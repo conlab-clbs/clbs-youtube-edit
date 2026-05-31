@@ -95,7 +95,7 @@ Claude Code からは「このフォルダのYouTube動画を編集して」と�
 | `[カムリターン]` | 素材を終了しアバターに戻す | カメラ復帰 | しない |
 | `<break time="0.8s" />` | 沈黙ポーズ（ジェットカット対象） | 沈黙 | 沈黙 |
 
-台本は姉妹スキル **clbs-video-script-pro** で執筆できます（`examples/` にサンプルあり）。
+台本は姉妹スキル **clbs-youtube-script-pro** で執筆できます（`examples/` にサンプルあり）。
 
 ## 主なオプション
 
@@ -127,5 +127,5 @@ V4 Bロール  V5 ワイプ（右上・角丸）   A1/A2 音声L/R
 
 ## 関連
 
-- 台本執筆スキル: clbs-video-script-pro
+- 台本執筆スキル: clbs-youtube-script-pro
 - 素材生成: [Higgsfield](https://higgsfield.ai)（スライド/ピクチャー=Nano Banana 2、Bロール=Veo3）
