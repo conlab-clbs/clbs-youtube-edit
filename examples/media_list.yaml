@@ -1,0 +1,57 @@
+# テスト用素材台帳（clbs-video-edit-pro 検証用）
+# script.txt のタグ番号と number は 1対1対応
+
+# ========== VIDEO INFO ==========
+video_info:
+  title: "努力が報われない本当の理由（量子アンテナ）"
+  channel: "Takumi量子論"
+  target: "頑張っても結果が出ないと感じている20-40代"
+  created: "2026-05-30"
+  strategy: "ブラウジング型"
+
+# ========== HEADINGS ==========（[見出し：◯◯] 対応・pro skill 新設タグ）
+# 左上の見出しバー。次の [見出し：…] が来るまで継続表示
+headings:
+  - order: 1
+    text: "努力が報われない本当の理由"
+  - order: 2
+    text: "意識で物理宇宙を操作する"
+
+# ========== BROLLS ==========（[Bロールx] 対応）
+# 表示窓 >5秒のため sub_clips で3〜4秒ごとに分割（feedback_broll_tempo.md）
+brolls:
+  - number: 1
+    sub_clips:
+      - duration: 4
+        prompt: "Abstract quantum entanglement visualization, two glowing particles connected by a thin beam of light across deep cosmic space, centered symmetrical composition, volumetric glow, slow dolly push in, teal and violet cinematic grade, inspired by Interstellar"
+        keywords: "glowing particles space"
+      - duration: 4
+        prompt: "Extreme macro of two light points pulsing in perfect sync across a dark starfield, energy threads rippling between them, shallow depth of field, slow parallax drift, cyan and gold grade, scientific documentary style"
+        keywords: "light energy connection"
+      - duration: 4
+        prompt: "A translucent human brain made of light suspended in cosmic space, streams of data flowing from distant stars into it, rule of thirds, god-rays from above, gentle crane reveal, teal and warm amber grade, cinematic 4K"
+        keywords: "brain cosmos light"
+    aspect_ratio: "16:9"
+    source: seedance
+
+# ========== PICTURES ==========（[ピクチャーx] 対応・左側ポップアップ）
+pictures:
+  - number: 1
+    prompt: "A glowing translucent human brain rendered as a quantum antenna, neon-blue neural filaments extending outward like antennae into a starry cosmic field, colorful synaptic light points, dark space background, square composition, cinematic digital art"
+    aspect: "1:1"
+
+# ========== SLIDES ==========（[スライドx] 対応・NotebookLM等で作成）
+slides:
+  - number: 1
+    title: "なぜ、結果に差が出るのか？"
+    subtitle: "決定的な違いは「量子アンテナ」の感度"
+    description: "左に光り輝く脳（接続ON・成功）、右にノイズの走るグレーの脳（接続OFF・失敗）を2カラムで対比。上から降り注ぐ宇宙の情報フィールドを光線で表現"
+    layout: "上部タイトル＋サブタイトル、下部に左右2カラム比較（左ON=カラー発光 / 右OFF=モノクロ・グリッチ）"
+    tone: "ダーク系ブルー基調、宇宙・星空背景、シネマティック"
+
+# ========== THUMBNAIL ==========
+thumbnail:
+  title_text: "脳の量子アンテナ"
+  visual_concept: "光る脳と宇宙の情報フィールドが繋がるビジュアル、ON/OFFの対比"
+  color_scheme: "ダークブルー×シアン×ゴールド"
+  aspect: "16:9"
