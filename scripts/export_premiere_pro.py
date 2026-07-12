@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-clbs-youtube-edit / Premiere XML 書き出し（XMEML v4）
+clbs-youtube-edit / Premiere XML（takumiエンジン統合版） 書き出し（XMEML v4）
+fps は jetcut_plan.json の実測値を使用（旧: 30固定）。
 入力: jetcut_plan.json + timing_plan.json + video.mp4 + 素材
 トラック契約（厳守）:
   V1 メイン動画（ジェットカット済み）/ V2 ピクチャー / V3 スライド /
-  V4 Bロール / V5 ワイプ（スライド中のみ・右上）/ A1 左ch / A2 右ch
+  V4 Bロール / V5 ワイプ（スライド中のみ・右上）/ V6 ボード / A1 左ch / A2 右ch
 ※ 見出し・テロップは焼き込み(render_pro.py)とSRT(telop_jetcut.srt)で対応。
 """
 from __future__ import annotations
@@ -14,13 +15,14 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
-FPS = 30
+FPS = 30  # main()で jetcut_plan.json の実測fpsに置換
 W, H = 1920, 1080
 
 # 手仕上げ用のモーション既定値（インポート時は無視されるため目安）
 PICTURE_POS = (560, 540); PICTURE_SCALE = 62      # 左寄せ
 SLIDE_POS = (960, 540); SLIDE_SCALE = 100         # 中央フル
 WIPE_POS = (1632, 216); WIPE_SCALE = 25           # 右上（見本準拠）
+BOARD_POS = (490, 540); BOARD_SCALE = 52          # 左空間チョーク（アバターは中央右のまま）
 
 
 def pathurl(p: Path) -> str:
@@ -41,10 +43,15 @@ def asset_for(pdir: Path, typ: str, num: int) -> Path | None:
                               f"ピクチャー/image{num:02d}.png", f"image{num:02d}.png", f"image{num}.png"])
     if typ == "slide":
         return resolve(pdir, [f"スライド/slide_{num:03d}.png", f"slides/slide_{num:03d}.png",
-                              f"スライド/slide_{num:03d}.jpg", f"slides_page-{num}.jpg"])
+                              f"スライド/slide_{num:03d}.jpg", f"slides_page-{num}.jpg",
+                              f"slide{num:02d}.png", f"slide_{num:02d}.png", f"slide{num:02d}.jpg"])
     if typ == "broll":
         return resolve(pdir, [f"broll/broll{num:02d}.mp4", f"broll/broll{num}.mp4",
                               f"Bロール/broll{num:02d}.mp4", f"broll{num:02d}.mp4"])
+    if typ == "board":
+        return resolve(pdir, [f"チョーク/Board{num}.png", f"チョーク/board_{num:02d}.png",
+                              f"chalk/Board{num}.png", f"chalk/board_{num:02d}.png",
+                              f"Board/board_{num:02d}.png", f"board_{num:02d}.png"])
     return None
 
 
@@ -105,12 +112,26 @@ def track(items: str) -> str:
 
 
 def main(argv=None) -> int:
-    argv = argv or sys.argv[1:]
+    argv = argv if argv is not None else sys.argv[1:]
+    # --language ja|en を許容（XML生成は言語非依存のため値は使わない）
+    cleaned = []
+    skip = False
+    for a in argv:
+        if skip:
+            skip = False; continue
+        if a == "--language":
+            skip = True; continue
+        if a.startswith("--language="):
+            continue
+        cleaned.append(a)
+    argv = cleaned
     if not argv:
-        print("usage: export_premiere_pro.py <project_dir>", file=sys.stderr); return 1
+        print("usage: export_premiere_pro.py <project_dir> [--language ja|en]", file=sys.stderr); return 1
     pdir = Path(argv[0]).expanduser().resolve()
     video = pdir / "video.mp4"
     jet = json.loads((pdir / "jetcut_plan.json").read_text(encoding="utf-8"))
+    global FPS
+    FPS = int(round(float(jet.get("fps", FPS))))
     plan = json.loads((pdir / "timing_plan.json").read_text(encoding="utf-8"))
     vurl = pathurl(video)
 
@@ -127,11 +148,11 @@ def main(argv=None) -> int:
         a2 += aclip(f"a2-{i}", "video.mp4", vurl, in_f, out_f, start_f, end_f, 2)
     total_frames = cum
 
-    v2 = v3 = v4 = v5 = ""
-    n_pic = n_sld = n_brl = 0
+    v2 = v3 = v4 = v5 = v6 = ""
+    n_pic = n_sld = n_brl = n_brd = 0
     slide_intervals = []
     for ev in plan["events"]:
-        if ev["type"] not in ("picture", "slide", "broll") or "jc_end" not in ev:
+        if ev["type"] not in ("picture", "slide", "broll", "board") or "jc_end" not in ev:
             continue
         sf = round(ev["jc_start"] * FPS); ef = max(round(ev["jc_end"] * FPS), sf + 1)
         path = asset_for(pdir, ev["type"], ev["number"] or 1)
@@ -146,6 +167,8 @@ def main(argv=None) -> int:
             v3 += vclip(f"v3-{n_sld}", name, url, 0, ef - sf, sf, ef, SLIDE_SCALE, *SLIDE_POS, is_image=True); n_sld += 1
         elif ev["type"] == "broll":
             v4 += vclip(f"v4-{n_brl}", name, url, 0, ef - sf, sf, ef); n_brl += 1
+        elif ev["type"] == "board":  # V6 左空間チョーク（透過PNG・アバター主画面のまま）
+            v6 += vclip(f"v6-{n_brd}", name, url, 0, ef - sf, sf, ef, BOARD_SCALE, *BOARD_POS, is_image=True); n_brd += 1
 
     # V5 ワイプ: スライド区間に重なる V1 配置を右上ワイプで複製
     wi = 0
@@ -168,7 +191,7 @@ def main(argv=None) -> int:
     <media>
       <video>
         <format><samplecharacteristics><width>{W}</width><height>{H}</height>
-          <pixelaspectratio>square</pixelaspectratio><fielddominance>none</fielddominance></samplecharacteristics></format>{track(v1)}{track(v2)}{track(v3)}{track(v4)}{track(v5)}
+          <pixelaspectratio>square</pixelaspectratio><fielddominance>none</fielddominance></samplecharacteristics></format>{track(v1)}{track(v2)}{track(v3)}{track(v4)}{track(v5)}{track(v6)}
       </video>
       <audio><numchannels>2</numchannels>{track(a1)}{track(a2)}
       </audio>
@@ -178,7 +201,7 @@ def main(argv=None) -> int:
 """
     out = pdir / "project_premiere.xml"
     out.write_text(xml, encoding="utf-8")
-    print(f"[xml] V1={len(placements)} V2={n_pic} V3={n_sld} V4={n_brl} V5={wi}  frames={total_frames}")
+    print(f"[xml] V1={len(placements)} V2={n_pic} V3={n_sld} V4={n_brl} V5={wi} V6={n_brd}  frames={total_frames}")
     print(f"- {out}")
     return 0
 

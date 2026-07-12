@@ -1,33 +1,6 @@
-# 中間生成物・出力
-*.mp4
-*.m4a
-*.wav
-*.srt
-*.ass
-*.xml
-transcript.json
-timing_plan.json
-jetcut_plan.json
-telop_*.json
-_filtergraph.txt
-_frames/
-heading_*.png
-wipe_*.png
-analyze.log
-render.log
-
-# 素材（重いので除外。examples はテキストのみ）
-スライド/
-ピクチャー/
-broll/
-slides/
-pictures/
-
-# Python
+.DS_Store
 __pycache__/
 *.pyc
 .venv/
-venv/
-
-# OS
-.DS_Store
+scripts/_backup*/
+scripts/*backup*.py
