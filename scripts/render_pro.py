@@ -8,7 +8,7 @@ takumi-youtube-edit / 全合成MP4レンダラー（clbs-youtube-edit render_pro
     → analyze の seg_bounds と実レンダが恒等になり、テロップ先行/音声遅れが構造的に消える。
  2) カット点に5msマイクロフェード（aselectハードカットのクリックノイズ除去）。
  3) 2パス loudnorm（-14 LUFS / TP -1.5、YouTube基準）。TAKUMI_LOUDNORM=0 で無効。
- 4) 交互パンチイン（カットごとに100%/104%を交互適用）。TAKUMI_PUNCHIN=0 で無効。
+ 4) 交互パンチイン（カットごとに100%/104%を交互適用）。既定オフ（2026-09-29 本人「倍率は固定に」）。TAKUMI_PUNCHIN=1 で有効。
  5) fps は ffprobe 実測（旧: 30固定。HeyGenの25fps素材で量子化誤差が拡大していた）。
  6) チョーク [ボードN] の左空間合成に対応（旧renderは未実装・XMLのみだった）。
  7) Bロールは番号ごとに個別入力（旧: broll01のみ全区間流用）。
@@ -30,12 +30,29 @@ from PIL import Image, ImageDraw, ImageFont
 W, H = 1920, 1080
 AFADE = 0.005  # カット点マイクロフェード秒
 
+# ---------- 後方互換モジュール定数（2026-07-16 復元） ----------
+# 本ファイルのJPレンダ本体(main)は per-video ffprobe実測 fps をローカル変数 `fps` として使う
+# （旧: 固定30 → 実測化。HeyGenの25fps素材等でも量子化誤差が出ないようにするための意図的な変更）。
+# そのため fps はモジュールレベル定数ではなく main() 内のローカル変数のみで扱う。
+# 一方 render_chunked.py（_factory/orchestrator）等の外部呼び出し側は `import render_pro as rp` して
+# rp.FPS をモジュール属性として直接参照するため、JP専用書き換え時に本定数が失われるとENモードが
+# AttributeError で即死する（2026-07-15 EN#11編集で発覚・回帰）。
+# ここでは外部参照用の後方互換デフォルト値のみを復元する。JP本体(main)のロジック・既定値は無変更。
+FPS = 30  # HeyGen出力=30fps固定という前提の後方互換デフォルト（旧render_pro_legacy.py準拠）
+
 
 def ff() -> str:
     env = os.environ.get("FFMPEG_PATH")
     if env and Path(env).exists():
         return env
     return shutil.which("ffmpeg") or "ffmpeg"
+
+
+def esc(t: float) -> str:
+    """後方互換の秒→ffmpeg式文字列変換（2026-07-16 モジュール属性として復元・旧render_pro_legacy.py準拠の
+    3桁精度）。main() 内では同名のネスト関数（6桁精度）がこの名前をシャドーイングし、JP本体の挙動は不変。
+    render_chunked.py 等、外部から `rp.esc` をモジュール属性として参照する呼び出し専用。"""
+    return f"{t:.3f}"
 
 
 def _resolve_font() -> str:
@@ -83,6 +100,20 @@ def make_wipe_border(out: Path, w: int, h: int, r: int) -> None:
 # ---------- 見出しバー PNG（Takumi既定: 紺地×金枠×白字。CLBS_HEADING_THEME=light で旧配色） ----------
 def render_heading_png(text: str, out: Path) -> tuple[int, int]:
     theme = os.environ.get("CLBS_HEADING_THEME", "dark_gold")
+    if theme == "plain_white":
+        # 街録チャンネル風: 帯・枠なし、白太字＋黒フチのみ
+        font = ImageFont.truetype(FONT, int(os.environ.get("CLBS_HEADING_SIZE", "52")))
+        sw = 6
+        tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
+        tb = tmp.textbbox((0, 0), text, font=font, stroke_width=sw)
+        tw, th = tb[2] - tb[0], tb[3] - tb[1]
+        pad = 4
+        img = Image.new("RGBA", (tw + pad * 2, th + pad * 2), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        d.text((pad - tb[0], pad - tb[1]), text, font=font, fill=(255, 255, 255, 255),
+               stroke_width=sw, stroke_fill=(0, 0, 0, 235))
+        img.save(out)
+        return img.width, img.height
     if theme == "dark_gold":
         box_fill = (14, 20, 38, 235)
         box_outline = (201, 166, 88, 255)
@@ -153,6 +184,15 @@ def build_ass(caps: list[dict], out: Path) -> None:
     bgr = (rgb[4:6] + rgb[2:4] + rgb[0:2]).upper()
     y_env = os.environ.get("CLBS_TELOP_Y", "").strip()
     pos_tag = f"{{\\an5\\pos({W // 2},{int(y_env)})}}" if y_env else ""
+    # CLBS_TELOP_STYLE=box: 街録チャンネル風（半透明黒帯＋白太字・フチなし）
+    if os.environ.get("CLBS_TELOP_STYLE", "").strip() == "box":
+        fs = int(os.environ.get("CLBS_TELOP_SIZE", "70"))
+        box_a = os.environ.get("CLBS_TELOP_BOX_ALPHA", "50").strip()  # 00=不透明
+        style_line = (f"Style: Default,{FONT_NAME},{fs},&H00FFFFFF,&H00FFFFFF,"
+                      f"&H{box_a}000000,&H{box_a}000000,-1,0,0,0,100,100,0,0,3,16,0,2,20,20,42,1")
+    else:
+        style_line = (f"Style: Default,{FONT_NAME},90,&H00FFFFFF,&H00FFFFFF,"
+                      f"&H00{bgr},&H64000000,-1,0,0,0,100,100,0,0,1,6,2,2,20,20,20,1")
     head = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {W}
@@ -162,7 +202,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{FONT_NAME},90,&H00FFFFFF,&H00FFFFFF,&H00{bgr},&H64000000,-1,0,0,0,100,100,0,0,1,6,2,2,20,20,20,1
+{style_line}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -312,7 +352,7 @@ def main(argv=None) -> int:
         broll_paths.append(p)
 
     use_wipe = bool(slide_iv and any(slide_paths.values()))
-    punchin = os.environ.get("TAKUMI_PUNCHIN", "1") != "0" and len(kept) > 1
+    punchin = os.environ.get("TAKUMI_PUNCHIN", "0") == "1" and len(kept) > 1   # 既定オフ（2026-09-29 本人）
     zoom = float(os.environ.get("TAKUMI_PUNCHIN_ZOOM", "1.04"))
     use_loudnorm = os.environ.get("TAKUMI_LOUDNORM", "1") != "0"
 

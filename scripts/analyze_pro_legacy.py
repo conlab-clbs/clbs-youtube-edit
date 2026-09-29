@@ -95,10 +95,10 @@ def parse_script(script_path: Path) -> tuple[str, list[VisualEvent]]:
     # heading とその他タグを一つの走査で拾う
     if LANG == "en":
         # 英語タグ: [Slide N] / [Picture N] / [B-Roll N]（BRoll/B Roll も許容）/
-        #           [Cam Return] / [Heading: ...]
+        #           [Motion N]（全画面静止画＋パン）/ [Cam Return] / [Heading: ...]
         combined = re.compile(
             r"(?P<heading>\[\s*Heading\s*[:：]\s*(?P<htext>.+?)\s*\])"
-            r"|(?P<tag>\[\s*(?P<ttype>Slide|Picture|B[\s\-]?Roll|Board|Cam\s*Return)\s*(?P<tnum>\d+)?\s*\])",
+            r"|(?P<tag>\[\s*(?P<ttype>Slide|Picture|B[\s\-]?Roll|Motion|Board|Cam\s*Return)\s*(?P<tnum>\d+)?\s*\])",
             re.IGNORECASE,
         )
     else:
@@ -118,6 +118,7 @@ def parse_script(script_path: Path) -> tuple[str, list[VisualEvent]]:
         elif LANG == "en":
             t = re.sub(r"[\s\-]", "", m.group("ttype")).lower()
             typ = {"slide": "slide", "picture": "picture", "broll": "broll",
+                   "motion": "motion",
                    "board": "board", "camreturn": "cam_return"}[t]
             num = int(m.group("tnum")) if m.group("tnum") else None
             events.append(VisualEvent(typ, num, "", m.group("tag"), pos))

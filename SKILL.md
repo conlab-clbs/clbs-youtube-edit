@@ -9,6 +9,17 @@ description: 顔出しHeyGenアバター動画（VSL・ウェビナー・YouTube
 
 顔出しアバター動画（HeyGen等）＋無発音タグ付き台本から、**ジェットカット → 素材自動配置 → テロップ/見出し焼き込み**まで実行し、**Premiere Pro XML** と **ほぼ完成形の final.mp4** を同時に書き出す。
 
+## 進め方（2026-09-05 Fable 5.1 公式ガイド対応）
+
+- **止まってユーザーの判断を待つのは次の4つだけ**。それ以外（analyze → XML → render → qa → Frame.ioアップ）は完走する。
+  1. HeyGenの再生成・アバター再生成（クレジット消費）
+  2. `script.txt`・素材フォルダの上書きや削除（本人の入力物を壊す操作）
+  3. 本人の赤入れの解釈が割れ、直し方で成果物が変わるとき
+  4. qa_sync.py が FAIL のまま直せないとき（FAILの中身を報告して止まる。黙って納品しない）
+- 各ステップの完了時に1行（何をした・次に何をする）。最後の報告は qa_report.md の要約と成果物パスだけで状況が分かる形にする。
+- 頼まれていない改善（パラメータの独自変更・スクリプト修正・サムネ作成・Finderで開く等）は実行せず、報告の末尾に提案として書く。
+- 完成後の修正は該当区間の再レンダと一文差し替えだけ。全再生成・パート丸ごと再生成は提案もしない。
+
 ## 設計思想（既存 clbs-video-edit / slidevideo-edit との違い）
 
 - **タグは無発音**：台本の `[見出し：◯◯] / [スライドN] / [ピクチャーN] / [BロールN] / [カムリターン]` はアバターに読み上げさせない。位置決めは VAD のタグ検出ではなく **Whisper文字起こし × 台本本文の difflib 照合**で逆算する（堅牢）。
@@ -74,7 +85,7 @@ python3 scripts/qa_sync.py "$P"
 - `CLBS_WIPE_CROP="w:h:x:y"`：ワイプ切り抜き（既定 `760:760:910:170`＝顔＋肩・中央）
 - **デザイン既定はTakumi標準（2026-07-06 反転）**: テロップ=白文字＋紺縁 `CLBS_TELOP_OUTLINE=233B6C`、見出し=`CLBS_HEADING_THEME=dark_gold`（紺地×金枠×白字・ブッダ回）、**右上LINEバナー=非表示**。第一稿がこの既定と違ったら旧版スクリプトを疑うこと
 - バナーを出したい案件のみ `CLBS_LINE_BANNER=1` でオプトイン
-- 🆕 `TAKUMI_PUNCHIN=0` で交互パンチイン無効 / `TAKUMI_PUNCHIN_ZOOM`（既定 1.04）
+- 交互パンチイン（カットごとに100%/104%）は既定オフ（2026-09-29 本人「倍率は固定に」）。使うときだけ `TAKUMI_PUNCHIN=1` / `TAKUMI_PUNCHIN_ZOOM`（既定 1.04）
 - 🆕 `TAKUMI_LOUDNORM=0` でラウドネス正規化無効（既定 -14 LUFS 2パス）
 - 🆕 `CLBS_VCODEC=h264_videotoolbox`＋`CLBS_VBITRATE=12M`: Apple Silicon HWエンコード
 - `--language en` はレガシーエンジン（`render_pro_legacy.py`）へ自動委譲
